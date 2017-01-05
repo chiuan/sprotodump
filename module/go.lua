@@ -11,7 +11,7 @@ local fmt_file_header = [[
 package %s
 
 import (
-    "reflect"
+    _ "reflect"
 
     "github.com/xjdrew/gosproto"
 )
@@ -84,8 +84,8 @@ local function get_package_name(filename)
     return ("sproto_%s"):format(name)
 end
 
-local function get_file_header(filename)
-    local package = get_package_name(filename)
+local function get_file_header(filename,p)
+    local package = p or get_package_name(filename)
     return fmt_file_header:format(filename, package, package)
 end
 
@@ -180,7 +180,7 @@ local function main(trunk, build, param)
     assert(#param.sproto_file==1, "one sproto file one package")
     local f = new_stream()
     local filename = param.sproto_file[1]
-    f:write(get_file_header(filename))
+    f:write(get_file_header(filename,param.package))
     for name, fields in pairs(trunk[1].type) do
         write_struct(f, name, fields)
     end

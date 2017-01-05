@@ -115,6 +115,8 @@ local function parse_param(...)
     ["-d"] = "dircetory",
     ["-o"] = "outfile",
     ["-p"] = "package",
+    ["-goid"] = "goidfile",
+    ["-csid"] = "csidfile",
   }
   while true do
     result = parser_outopt(stream)

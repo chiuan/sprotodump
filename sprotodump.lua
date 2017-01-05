@@ -30,6 +30,7 @@ local module = {
   ["-spb"] = require "module.spb",
   ["-go"] = require "module.go",
   ["-md"] = require "module.md",
+  ["-id"] = require "module.id",
 }
 
 
