@@ -13,7 +13,7 @@ package %s
 import (
     _ "reflect"
 
-    "github.com/xjdrew/gosproto"
+    sproto "github.com/szyhf/go-sproto"
 )
 ]]
 
@@ -57,6 +57,8 @@ local fmt_protocol = {
         },]]
 }
 
+local fmt_type_index = [[var %s_Index uint16 = %d]]
+
 local stream = {}
 stream.__index = stream
 
@@ -94,9 +96,9 @@ local function canonical_name(name)
 end
 
 local type_map = {
-    string = "*string",
-    integer = "*int",
-    boolean = "*bool",
+    string = "string",
+    integer = "int",
+    boolean = "bool",
 }
 
 local array_type_map = {
@@ -178,11 +180,33 @@ end
 
 local function main(trunk, build, param)
     assert(#param.sproto_file==1, "one sproto file one package")
+
+    -- 增加消息序号
+    local indexfile = param.indexfile
+    local index = {count = 0,}
+    if indexfile then
+        if util.check_file(indexfile) then
+            index = assert(loadstring(util.read_file(indexfile)))()
+        end
+    end
+
     local f = new_stream()
     local filename = param.sproto_file[1]
     f:write(get_file_header(filename,param.package))
-    for name, fields in pairs(trunk[1].type) do
+
+    local types = trunk[1].sort_types
+    for k,v in ipairs(types) do
+        local name = v
+        local fields = trunk[1].type[name]
         write_struct(f, name, fields)
+
+        if index[name] == nil then
+            index[name] = index.count
+            index.count = index.count + 1
+        end
+
+        f:write(fmt_type_index:format(name,index[name]))
+        f:write("")
     end
 
     local base_name = get_base_name(filename)

@@ -174,7 +174,7 @@ function convert.type(all, obj)
 end
 
 local function adjust(r, build, namespace)
-	local result = { type = {} , protocol = {} }
+	local result = { type = {} , protocol = {} , sort_types = {} }
 
 	for _, obj in ipairs(r) do
 		local set = result[obj.type]
@@ -182,6 +182,9 @@ local function adjust(r, build, namespace)
 		local name = obj[1]
 		local meta_info = tostring(obj.meta)
 		assert(set[name] == nil and build_set[name] == nil, "redefined "..highlight_type(name)..meta_info)
+		
+		table.insert(result.sort_types,name)
+
 		set[name] = convert[obj.type](result, obj, namespace)
 	end
 
@@ -302,7 +305,7 @@ end
 ]]
 local function gen_trunk(trunk_list)
 	local ret = {}
-	local build = {protocol={}, type={}}
+	local build = {protocol={}, type={}, sort_types={}}
 	for i,v in ipairs(trunk_list) do
 		local text = v[1]
 		local name = v[2] or "=text"
@@ -310,6 +313,7 @@ local function gen_trunk(trunk_list)
 		local ast = parser(text, name, namespace, build)
 		local protocol = ast.protocol
 		local type = ast.type
+		local sort_types = ast.sort_types
 		ast.info = {
 			filename = name,
 			namespace = namespace,
@@ -325,6 +329,8 @@ local function gen_trunk(trunk_list)
 			assert(build.protocol[k] == nil, k)
 			build.protocol[k] = v
 		end
+		-- merge sort types
+		build.sort_types = sort_types
 
 		table.insert(ret, ast)
 	end

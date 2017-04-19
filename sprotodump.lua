@@ -31,8 +31,8 @@ local module = {
   ["-go"] = require "module.go",
   ["-md"] = require "module.md",
   ["-id"] = require "module.id",
+  ["-index"] = require "module.index",
 }
-
 
 ------------------------------- param -------------------------------------
 local param = parse_param(...)

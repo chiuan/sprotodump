@@ -23,6 +23,16 @@ function M.read_file(path)
   return ret
 end
 
+function M.check_file(path )
+  local handle = io.open(path,"r")
+  if handle == nil then
+    return false
+  else
+    handle.close()
+    return true
+  end
+end
+
 function M.write_file(path, data, mode)
   local handle = io.open(path, mode)
   handle:write(data)

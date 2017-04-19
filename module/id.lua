@@ -12,14 +12,13 @@ local fmt_file_header = [[
 package msg
 
 import (
-	"server/sproto"
-	"server/conf"
+	"net/sproto"
 )
 
-var Processor = sproto.NewProcessor(conf.MsgPack)
+var Processor = sproto.NewProcessor(true)
 ]]
 
-local fmt_msg_name = [[       Processor.Register(&%s{})]]
+local fmt_msg_name = [[       Processor.RegisterWithID(&%s{},%s_Index)]]
 
 local fmt_start = [[func init() {]]
 local fmt_end = [[}]]
@@ -100,19 +99,28 @@ end
 
 local function main(trunk,build,param )
 	
-	local names = {}
-	-- 注意：顺序可能不一致的哦 
-	for name, fields in pairs(trunk[1].type) do
-		table.insert(names,name)
+	local names = trunk[1].sort_types
+	-- 增加消息序号
+    local indexfile = param.indexfile
+    local index = {count = 0,}
+    if indexfile then
+        if util.check_file(indexfile) then
+            index = assert(loadstring(util.read_file(indexfile)))()
+        end
     end
-
+    for _,name in ipairs(names) do
+    	if index[name] == nil then
+            index[name] = index.count
+            index.count = index.count + 1
+        end
+    end
 
 	-- write msg.go
 	local f = new_stream()
 	f:write(fmt_file_header)
 	f:write(fmt_start)
     for _,name in ipairs(names) do
-    	f:write(fmt_msg_name:format(name))
+    	f:write(fmt_msg_name:format(name,name))
     end
     f:write(fmt_end)
 
@@ -121,16 +129,16 @@ local function main(trunk,build,param )
     f2:write(fmt_cs_header)
     f2:write([[		static Dictionary<Type, short> dictTtoI = new Dictionary<Type, short>() {]])
     for i,name in ipairs(names) do
-    	f2:write(fmt_cs_id:format(name,i-1))
+    	f2:write(fmt_cs_id:format(name,index[name]))
     end
     f2:write([[		};]])
 
     f2:write([[		public static SprotoTypeBase Create(short id, ref byte[] content){]])
     for i,name in ipairs(names) do
     	if i == 1 then
-    		f2:write(fmt_cs_gen_if:format(0,name))
+    		f2:write(fmt_cs_gen_if:format(index[name],name))
     	else
-    		f2:write(fmt_cs_gen_elseif:format(i-1,name))
+    		f2:write(fmt_cs_gen_elseif:format(index[name],name))
     	end
     end
     f2:write(fmt_cs_gen_else)
@@ -143,17 +151,19 @@ local function main(trunk,build,param )
 
     local goidfile = param.goidfile
     if not goidfile then
-        print(content)
-        return
-    end
-    local csidfile = param.csidfile
-    if not csidfile then
-    	print(content2)
-    	return
+        --print(content)
+        --print("===========================没有设置go-id-file")
+    else
+    	util.write_file(goidfile, content, "w")
     end
 
-    util.write_file(goidfile, content, "w")
-    util.write_file(csidfile, content2, "w")
+    local csidfile = param.csidfile
+    if not csidfile then
+    	--print(content2)
+    	--print("===========================没有设置cs-id-file")
+    else
+    	util.write_file(csidfile, content2, "w")	
+    end
 end
 
 return main
