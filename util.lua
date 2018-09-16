@@ -28,7 +28,7 @@ function M.check_file(path )
   if handle == nil then
     return false
   else
-    handle.close()
+    handle:close()
     return true
   end
 end

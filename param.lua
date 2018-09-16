@@ -117,6 +117,7 @@ local function parse_param(...)
     ["-p"] = "package",
     ["-goid"] = "goidfile",
     ["-csid"] = "csidfile",
+    ["-luaid"] = "luaidfile",
     ["-i"] = "indexfile",
   }
   while true do

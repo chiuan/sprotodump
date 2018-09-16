@@ -23,7 +23,7 @@ local fmt_struct_end = [[}
 ]]
 
 -- protocol name
-local fmt_protocol_name = [[var Name string = "%s"]]
+local fmt_protocol_name = [[const Name = "%s"]]
 
 -- protocols
 local fmt_protocols_header = [[var Protocols []*sproto.Protocol = []*sproto.Protocol{]]
@@ -57,7 +57,7 @@ local fmt_protocol = {
         },]]
 }
 
-local fmt_type_index = [[var %s_Index uint16 = %d]]
+local fmt_type_index = [[const %s_Index = %d]]
 
 local stream = {}
 stream.__index = stream
@@ -92,18 +92,18 @@ local function get_file_header(filename,p)
 end
 
 local function canonical_name(name)
-    return name:gsub("%f[^\0%_%.]%l",string.upper):gsub("[%_%.]","")
+    return name--:gsub("%f[^\\0%_%.]%l",string.upper):gsub("[%_%.]","")
 end
 
 local type_map = {
     string = "string",
-    integer = "int",
+    integer = "int64",
     boolean = "bool",
 }
 
 local array_type_map = {
     string = "[]string",
-    integer = "[]int",
+    integer = "[]int64",
     boolean = "[]bool",
 }
 
@@ -186,7 +186,11 @@ local function main(trunk, build, param)
     local index = {count = 0,}
     if indexfile then
         if util.check_file(indexfile) then
-            index = assert(loadstring(util.read_file(indexfile)))()
+            if _VERSION == "Lua 5.3" then
+                index = assert(load(util.read_file(indexfile)))()
+            else
+                index = assert(loadstring(util.read_file(indexfile)))()
+            end
         end
     end
 

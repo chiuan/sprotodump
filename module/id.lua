@@ -38,8 +38,8 @@ namespace SprotoType
 	{
 		static Dictionary<short, Type> dictItoT = new Dictionary<short, Type>();
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-		static void Init()
+		//[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		public static void Init()
 		{
 			foreach (var item in dictTtoI)
 			{
@@ -105,7 +105,11 @@ local function main(trunk,build,param )
     local index = {count = 0,}
     if indexfile then
         if util.check_file(indexfile) then
-            index = assert(loadstring(util.read_file(indexfile)))()
+			if _VERSION == "Lua 5.3" then
+				index = assert(load(util.read_file(indexfile)))()
+            else
+            	index = assert(loadstring(util.read_file(indexfile)))()
+            end
         end
     end
     for _,name in ipairs(names) do

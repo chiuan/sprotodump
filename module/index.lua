@@ -18,8 +18,7 @@ return index
 ]]
 
 local fmt_item = [[
-	%s = %d,
-]]
+	%s = %d,]]
 
 
 local test = {
@@ -49,10 +48,16 @@ local function main(trunk,build,param )
 
 	local index = {count = 0,}
 
+	
+
 	-- 读取老的记录
 	local path = param.outfile
 	if util.check_file(path) then
-		index = assert(loadstring(util.read_file(path)))()
+		if _VERSION == "Lua 5.3" then
+			index = assert(load(util.read_file(path)))()
+		else
+			index = assert(loadstring(util.read_file(path)))()
+		end
 	end
 
     -- 从现在的type中生成一系列序号记录起来
@@ -70,8 +75,13 @@ local function main(trunk,build,param )
     local f = new_stream()
 	f:write(fmt_file_header)
 	f:write(fmt_start)
+	local items = {}
     for k,v in pairs(index) do
-		f:write(fmt_item:format(k,v))
+    	table.insert(items, fmt_item:format(k,v))
+	end
+	table.sort(items)
+	for _,v in ipairs(items) do
+		f:write(v)
 	end
     f:write(fmt_end)
 	local content = f:dump()
